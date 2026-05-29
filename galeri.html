@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hujan — Galeri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #111111;
+      --muted:  #888888;
+      --border: #e0e0e0;
+      --accent: #444444;
+      --white:  #ffffff;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'DM Sans', sans-serif;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--white); color: var(--ink); font-family: var(--font-body); font-weight: 300; min-height: 100vh; }
+
+    /* ── NAV ── */
+    nav {
+      padding: 1.4rem 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 10;
+    }
+
+    .nav-logo { font-family: var(--font-display); font-size: 1.2rem; font-weight: 300; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: 0.78rem; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--ink); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding: 3.5rem 4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .page-title span { color: var(--muted); }
+
+    /* ── GRID ── */
+    main { padding: 3rem 4rem 5rem; }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 2rem;
+    }
+
+    .card { cursor: pointer; }
+
+    .card-thumb {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      border-radius: 2px;
+      background: #f5f5f5;
+      position: relative;
+    }
+
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s var(--ease);
+    }
+
+    .card:hover .card-thumb img { transform: scale(1.04); }
+
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(17,17,17,0);
+      transition: background 0.3s var(--ease);
+      display: flex;
+      align-items: flex-end;
+      padding: 1.2rem;
+    }
+
+    .card:hover .card-overlay { background: rgba(17,17,17,0.15); }
+
+    .card-overlay-text {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .card:hover .card-overlay-text { opacity: 1; transform: translateY(0); }
+
+    .card-info { padding: 0.9rem 0 0; }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 400;
+      line-height: 1.3;
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(17,17,17,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 6px;
+      max-width: 860px;
+      width: 100%;
+      max-height: 90vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+      animation: modalIn 0.3s var(--ease);
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-image {
+      position: relative;
+      background: #f5f5f5;
+      min-height: 420px;
+      max-height: 90vh;
+    }
+
+    .modal-image img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      padding: 1.2rem;
+    }
+
+    .modal-image img.hidden { display: none; }
+
+    .modal-body {
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      overflow-y: auto;
+      max-height: 90vh;
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 300;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    .modal-divider { width: 32px; height: 1px; background: var(--border); }
+
+    .modal-story { font-size: 0.88rem; line-height: 1.85; color: var(--accent); font-weight: 300; white-space: pre-wrap; }
+
+    .modal-nav { display: flex; gap: 0.75rem; margin-top: 0.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+
+    .modal-nav button {
+      font-family: var(--font-body);
+      font-size: 0.73rem;
+      letter-spacing: 0.08em;
+      padding: 0.45rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s var(--ease);
+    }
+
+    .modal-nav button:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
+    .modal-nav button:disabled { opacity: 0.25; cursor: default; }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid rgba(17,17,17,0.15);
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover { background: #ffffff; }
+
+    /* ── DUAL IMAGE TOGGLE ── */
+    .img-toggle {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(17,17,17,0.5);
+      backdrop-filter: blur(6px);
+      border-radius: 100px;
+      padding: 6px 12px;
+      z-index: 5;
+    }
+
+    .img-toggle span {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+
+    .img-toggle span.active-label { color: #ffffff; font-weight: 400; }
+
+    .toggle-track {
+      width: 34px;
+      height: 19px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.2);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.25s;
+      border: none;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .toggle-track.on { background: rgba(255,255,255,0.45); }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform 0.25s var(--ease);
+    }
+
+    .toggle-track.on .toggle-thumb { transform: translateX(15px); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 1.8rem 4rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      nav, .page-header, main, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .modal { grid-template-columns: 1fr; max-height: 95vh; overflow-y: auto; }
+      .modal-image { height: 280px; min-height: unset; max-height: unset; }
+      .modal-image img { padding: 0.8rem; }
+      .modal-body { max-height: unset; overflow-y: visible; padding: 2rem 1.5rem; }
+      .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html">Beranda</a></li>
+      <li><a href="galeri.html" class="active">Galeri</a></li>
+      <li><a href="tentang.html">Tentang</a></li>
+    </ul>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <h1 class="page-title">Galeri <span>Karya</span></h1>
+  </div>
+
+  <!-- GALLERY GRID -->
+  <main>
+    <div class="gallery-grid" id="grid"></div>
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" id="backdrop" onclick="handleBackdropClick(event)" role="dialog" aria-modal="true" aria-label="Detail karya">
+    <div class="modal" id="modal">
+      <div class="modal-image">
+        <img id="m-img-color" src="" alt="" />
+        <img id="m-img-mono" src="" alt="" class="hidden" />
+        <div class="img-toggle" id="img-toggle" style="display:none">
+          <span id="lbl-color" class="active-label">Berwarna</span>
+          <button class="toggle-track" id="toggle-btn" onclick="toggleImage()" aria-label="Toggle monochrome">
+            <div class="toggle-thumb"></div>
+          </button>
+          <span id="lbl-mono">Monochrome</span>
+        </div>
+        <button class="close-btn" onclick="closeModal()" aria-label="Tutup">✕</button>
+      </div>
+      <div class="modal-body">
+        <h2 class="modal-title" id="m-title"></h2>
+        <div class="modal-divider"></div>
+        <p class="modal-story" id="m-story"></p>
+        <div class="modal-nav">
+          <button id="prev-btn" onclick="navigate(-1)">← Sebelumnya</button>
+          <button id="next-btn" onclick="navigate(1)">Berikutnya →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>gtcsbgad gallery</span>
+    <span>© 2026</span>
+  </footer>
+
+  <script>
+    // ── DATA KARYA ── edit di sini untuk tambah karya baru
+    const works = [
+      {
+        id: 0,
+        title: "Halte di Ujung Sore",
+        src: "images/halte.jpeg",
+        story: "Di penghujung malam, di tanggal dan bulan yang sama, di setiap tahunnya, di tempat itu. Ia bertanya dengan kostum \"princess\"-nya (aslinya ia tidak menyukai warna pink. Namun, kata mereka kebanyakan, perempuan harusnya menyukai warna-warna cerah. Pink itu cerah).\n\nIa bertanya kepada \"pangerannya\", seseorang yang pada saat itu duduk di sebelahnya, menggunakan kostum serupa versi laki-laki. Entah laki-laki ini memang berpakaian seperti itu setiap harinya (artinya ia tidak pura-pura, seperti Si Kecil Princess, atau sedang kebetulan bermain raja-rajaan juga?), entahlah. Si Kecil langsung menganggap laki-laki itu \"pangerannya\" karena entah kenapa ia selalu berada di sana, di sebelahnya, di tempat itu, setiap tahunnya.\n\n\"Padahal ini tempat tongkronganku,\" gumamnya. \"Ya sudahlah... berarti dia milikku juga, bisa dibilang gitu kan?\"\n\nAnehnya, laki-laki itu tahu bahwa Si Kecil Princess selalu datang di saat hari yang kata orang \"special\". Dapat bisikan, katanya Si Kecil ke tempat itu karena menghindari orang-orang, main hilang-hilangan. Dia belum paham, hari \"special\" itu seperti apa.\n\n\"Kamu mau apa di tahun ini?\" kata Pangeran.\n\"Kenapa emang?\" (Si Kecil ini memang suka balik nanya).\n\"Gapapa, biar malam ini nggak sepi aja. Biar kamu nggak bosen di sini. Benda atau makanan, gitu?\"\n\"Apa ya? Gatau.\"\n\"Masa gatau? Sukanya apa?\"\n\"Gatau... uang?\"\n\"Anak kecil belum boleh megang uang, tau,\" ujarnya.\n\"Hmm... habis belum tau maunya apa. Mau ditemenin kamu dulu deh, sampai aku kepikiran maunya apa.\"\n\"Yaudah, kalau gitu.\"\n\nHal ini berulang setiap tahunnya, termasuk tahun ini. Bedanya, kostum yang ia pakai. Kostum princess-nya mulai lusuh. Laki-laki itu, pangeran itu, tidak ada di tempatnya.\n\n\"Astaga... ternyata aku mau malam ini, di tanggal dan bulan yang sama di setiap tahunnya, atau bahkan setiap hari kalau boleh... Aku dikelilingi hari 'special'. Hari 'special' itu yang ada kamunya, kan?\""
+      },
+      {
+        id: 1,
+        title: "Berbicara dengan Bulan",
+        src: "images/bulan.jpeg",
+        srcMono: "images/bulan1.jpeg",
+        story: "Ada cerita kecil yang muter terus di kepala ku. Kemarin, sambil menangis dia bercerita: jiwa raganya di ambang mati, masa depannya mulai hari ini berhenti, tapi tetap akan jadi yang pertama yang dibutuhkan keluarganya.\n\nAku kira ini salah satu proses dari cinta, karena katanya, \"cinta butuh pengertian dan perjuangan\".\n\nTapi, di titik ini aku mulai sadar, bisa jadi itu cuma jebakan? Aslinya cinta itu proses halus membenarkan rasa lelah yang dipelihara?\n\nIya, aku lagi hitung seberapa besar kemungkinan ikut tenggelam. Aku ngerasa jadi monster karena berfikir logis: \"kalau lanjut, akan selamat atau malah ikut tenggelam?\" Agak ironi memang.\n\nAku ngerasa jadi monster karena berfikir: \"bebannya mungkin bisa bikin masa depanku runtuh juga\".\n\nTapi sayangku, sebenarnya aku ini monster baik yang lagi mencoba jujur sama kapasitas diri sendiri.\n\nJadi, should I drown too?"
+      },
+      {
+        id: 2,
+        title: "Mawar",
+        src: "images/bukit.PNG",
+        story: "Bukit yang tinggi, angin yang kencang, dan rasa bebas yang tidak bisa dijelaskan. Saya menggambar karakter-karakter kecil di sana — terasa kecil di hadapan alam, tapi justru itulah yang membuat mereka merasa hidup."
+      },
+      {
+        id: 3,
+        title: "Ladang Kecil",
+        src: "images/ladang.PNG",
+        story: "Komik strip tentang seorang anak perempuan yang menemukan dunianya sendiri di ladang belakang rumah. Setiap panel menyimpan waktu yang berbeda — pagi, siang, sore. Kenangan masa kecil yang ingin saya jaga selamanya."
+      },
+      {
+        id: 4,
+        title: "Langit Malam Kita",
+        src: "images/halte.jpeg",
+        story: "Di saat merasa paling jatuh, tidak dipihak oleh seisi dunia, untuk kesekian kalinya, aku memilih menyendiri, kali ini di halte pinggir jalan. Spot baru.\n\nTak lama, ada perempuan lain memilih tempat yang sama.\n\nKu tanya keadaannya, karena mungkin, mungkin saja nasibnya sedang sama sepertiku.\n\nIbu tiga anak, driver shopee instant. Istirahat sambil menunggu orderan masuk, katanya. Ia mengeluh soal motornya yang butut, \"jalannya jadi lama kak, ngegasnya pakai effort, berat.\" Aku yang nggak ngerti otomotif coba menanggapi,\n\n\"Karena bukan matic juga kali ya mba?\" \"Bukan, emang motornya udah lama dan kropos kak. Sebelumnya aku bawa Beat, tapi ditarik buat nutup kebutuhan tiga anakku,\" katanya.\n\nMba cantik. 21.40 masih semangat, aku bisa lihat dari raut dan senyum di wajahnya. Berangkat dari jam 8 pagi, sudah mengelilingi Jakarta dua kali. Hari ini dapat 78 ribu, katanya. Ia bercerita betapa susah kerjaannya kali ini sejak ketentuan pajak baru bagi para driver. Perusahaan terus cari cara meraup keuntungan sebesar-besarnya dari mereka yang hanya ingin menyambung hidup.\n\n\"Mau aku anter pulang ga kak?\"\n\"Mau, tapi rumahku deket banget mba, di belakang jalan ini, tinggal ngesot.\"\n\"Oalah, kenapa nggak pulang kalau gitu? Nunggu pacar ya?\"\n\"Lagi nggak mba, malas, rumahku rame banget, bikin pusing. Jadi pengen nyari yang sepi.\" Bohong. Yang kamu maksud itu pikiranmu yang rame, kan?\n\nDari tujuan awal duduk di sana, mencoba meratapi nasib dan lagi-lagi mengeluh ke Tuhan karena satu-dua ciptaan-Nya, aku kembali digagalkan. Ditampar sekali lagi. Tuhan memang sudah muak dengar ceritaku, Dia menumbalkan mba cantik itu, dengan segala kondisinya.\n\nTernyata bukan dunia yang tak berpihak, aku saja yang lupa melihat."
+      },
+      {
+        id: 5,
+        title: "Taman Rahasia",
+        src: "images/bintang.jpeg",
+        story: "Di penghujung malam, di tanggal dan bulan yang sama, di setiap tahunnya, di tempat itu. Ia bertanya dengan kostum \"princess\"-nya (aslinya ia tidak menyukai warna pink. Namun, kata mereka kebanyakan, perempuan harusnya menyukai warna-warna cerah. Pink itu cerah).\n\nIa bertanya kepada \"pangerannya\", seseorang yang pada saat itu duduk di sebelahnya, menggunakan kostum serupa versi laki-laki. Entah laki-laki ini memang berpakaian seperti itu setiap harinya (artinya ia tidak pura-pura, seperti Si Kecil Princess, atau sedang kebetulan bermain raja-rajaan juga?), entahlah. Si Kecil langsung menganggap laki-laki itu \"pangerannya\" karena entah kenapa ia selalu berada di sana, di sebelahnya, di tempat itu, setiap tahunnya.\n\n\"Padahal ini tempat tongkronganku,\" gumamnya. \"Ya sudahlah... berarti dia milikku juga, bisa dibilang gitu kan?\"\n\nAnehnya, laki-laki itu tahu bahwa Si Kecil Princess selalu datang di saat hari yang kata orang \"special\". Dapat bisikan, katanya Si Kecil ke tempat itu karena menghindari orang-orang, main hilang-hilangan. Dia belum paham, hari \"special\" itu seperti apa.\n\n\"Kamu mau apa di tahun ini?\" kata Pangeran.\n\"Kenapa emang?\" (Si Kecil ini memang suka balik nanya).\n\"Gapapa, biar malam ini nggak sepi aja. Biar kamu nggak bosen di sini. Benda atau makanan, gitu?\"\n\"Apa ya? Gatau.\"\n\"Masa gatau? Sukanya apa?\"\n\"Gatau... uang?\"\n\"Anak kecil belum boleh megang uang, tau,\" ujarnya.\n\"Hmm... habis belum tau maunya apa. Mau ditemenin kamu dulu deh, sampai aku kepikiran maunya apa.\"\n\"Yaudah, kalau gitu.\"\n\nHal ini berulang setiap tahunnya, termasuk tahun ini. Bedanya, kostum yang ia pakai. Kostum princess-nya mulai lusuh. Laki-laki itu, pangeran itu, tidak ada di tempatnya.\n\n\"Astaga... ternyata aku mau malam ini, di tanggal dan bulan yang sama di setiap tahunnya, atau bahkan setiap hari kalau boleh... Aku dikelilingi hari 'special'. Hari 'special' itu yang ada kamunya, kan?\""
+      },
+    ];
+
+    let currentIdx = 0;
+    let isMonoActive = false;
+
+    // Render grid
+    document.getElementById('grid').innerHTML = works.map((w, i) => `
+      <article class="card" onclick="openModal(${i})" role="button" tabindex="0"
+        aria-label="Buka karya: ${w.title}"
+        onkeydown="if(event.key==='Enter')openModal(${i})">
+        <div class="card-thumb">
+          <img src="${w.src}" alt="${w.title}" loading="lazy" />
+          <div class="card-overlay">
+            <span class="card-overlay-text">Lihat cerita →</span>
+          </div>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">${w.title}</h2>
+        </div>
+      </article>
+    `).join('');
+
+    function openModal(i) {
+      currentIdx = i;
+      isMonoActive = false;
+      const w = works[i];
+      const imgColor  = document.getElementById('m-img-color');
+      const imgMono   = document.getElementById('m-img-mono');
+      const toggle    = document.getElementById('img-toggle');
+      const toggleBtn = document.getElementById('toggle-btn');
+
+      imgColor.src = w.src;
+      imgColor.alt = w.title;
+      imgColor.classList.remove('hidden');
+
+      if (w.srcMono) {
+        imgMono.src = w.srcMono;
+        imgMono.alt = w.title + ' (monochrome)';
+        imgMono.classList.add('hidden');
+        toggle.style.display = 'flex';
+        toggleBtn.classList.remove('on');
+        document.getElementById('lbl-color').classList.add('active-label');
+        document.getElementById('lbl-mono').classList.remove('active-label');
+      } else {
+        imgMono.src = '';
+        imgMono.classList.add('hidden');
+        toggle.style.display = 'none';
+      }
+
+      document.getElementById('m-title').textContent = w.title;
+      document.getElementById('m-story').textContent = w.story;
+      document.getElementById('prev-btn').disabled = i === 0;
+      document.getElementById('next-btn').disabled = i === works.length - 1;
+      document.getElementById('backdrop').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function toggleImage() {
+      isMonoActive = !isMonoActive;
+      const imgColor  = document.getElementById('m-img-color');
+      const imgMono   = document.getElementById('m-img-mono');
+      const toggleBtn = document.getElementById('toggle-btn');
+      const lblColor  = document.getElementById('lbl-color');
+      const lblMono   = document.getElementById('lbl-mono');
+      if (isMonoActive) {
+        imgColor.classList.add('hidden');
+        imgMono.classList.remove('hidden');
+        toggleBtn.classList.add('on');
+        lblColor.classList.remove('active-label');
+        lblMono.classList.add('active-label');
+      } else {
+        imgColor.classList.remove('hidden');
+        imgMono.classList.add('hidden');
+        toggleBtn.classList.remove('on');
+        lblColor.classList.add('active-label');
+        lblMono.classList.remove('active-label');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('backdrop').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target === document.getElementById('backdrop')) closeModal();
+    }
+
+    function navigate(dir) {
+      const next = currentIdx + dir;
+      if (next >= 0 && next < works.length) openModal(next);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'ArrowLeft') navigate(-1);
+      if (e.key === 'ArrowRight') navigate(1);
+    });
+  </script>
+</body>
+</html>
