@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hujan — About</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:    #111111;
+      --muted:  #888888;
+      --border: #e0e0e0;
+      --accent: #444444;
+      --btn:    #bbbbbb;
+      --white:  #ffffff;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'DM Sans', sans-serif;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--white); color: var(--ink); font-family: var(--font-body); font-weight: 300; min-height: 100vh; }
+
+    nav { padding: 1.4rem 4rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 10; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: 0.78rem; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.active { background: var(--btn); color: var(--white); padding: 4px 14px; border-radius: 100px; }
+
+    .about-wrap { max-width: 680px; margin: 0 auto; padding: 5rem 4rem 6rem; }
+    .about-label { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.2rem; }
+    .about-name { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 300; line-height: 1; letter-spacing: -0.02em; margin-bottom: 2.5rem; }
+    .about-name span { color: var(--muted); }
+    .divider { width: 40px; height: 1px; background: var(--border); margin-bottom: 2rem; }
+    .about-bio { font-size: 0.92rem; line-height: 1.9; color: var(--accent); font-weight: 300; margin-bottom: 3.5rem; }
+
+    .contact-section { border-top: 1px solid var(--border); padding-top: 2.5rem; }
+    .contact-label { font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+    .contact-list { display: flex; flex-direction: column; gap: 1rem; }
+    .contact-item { display: flex; align-items: center; gap: 1.5rem; }
+    .contact-type { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 80px; flex-shrink: 0; }
+    .contact-value { font-size: 0.88rem; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+    .contact-value:hover { border-color: var(--btn); color: var(--btn); }
+
+    footer { padding: 1.8rem 4rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.06em; }
+    /* ── HAMBURGER MENU ── */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px; z-index: 201;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 1.5px;
+      background: var(--ink); transition: all 0.3s var(--ease); transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    /* ── MOBILE MENU OVERLAY ── */
+    .mobile-menu {
+      display: none; position: fixed; inset: 0;
+      background: rgba(17,17,17,0.5); z-index: 200;
+      flex-direction: column; justify-content: flex-end;
+    }
+    .mobile-menu.open { display: flex; }
+
+    .mobile-sheet {
+      background: var(--white);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 24px 40px;
+      animation: sheetUp 0.3s var(--ease);
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .sheet-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .sheet-handle {
+      width: 36px; height: 3px; background: var(--border);
+      border-radius: 100px; margin: 0 auto 20px;
+    }
+    .sheet-label {
+      font-size: 0.62rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .sheet-close {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #f5f5f5; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; color: var(--muted);
+    }
+
+    .sheet-links { display: flex; flex-direction: column; gap: 2px; }
+    .sheet-link {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 12px; border-radius: 8px;
+      font-size: 0.85rem; color: var(--muted);
+      text-decoration: none; transition: all 0.15s;
+    }
+    .sheet-link:hover { background: #f5f5f5; color: var(--ink); }
+    .sheet-link.active { background: #f5f5f5; color: var(--ink); }
+    .sheet-link svg { flex-shrink: 0; }
+
+    .sheet-footer {
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 20px;
+    }
+    .sheet-social {
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      color: var(--muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .sheet-social:hover { color: var(--ink); }
+
+    @media (max-width: 700px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+    }
+    @media (min-width: 701px) { .mobile-menu { display: none !important; } }
+
+
+    @media (max-width: 700px) {
+      nav, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .about-wrap { padding: 3rem 1.5rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html" >Home</a></li>
+      <li><a href="gallery.html" >Gallery</a></li>
+      <li><a href="shop.html" >Shop</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="mobile-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-label">Navigate</span>
+        <button class="sheet-close" onclick="toggleMenu()">✕</button>
+      </div>
+      <div class="sheet-links">
+        <a href="index.html" class="sheet-link "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg> Home</a>
+        <a href="gallery.html" class="sheet-link "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg> Gallery</a>
+        <a href="shop.html" class="sheet-link "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> Shop</a>
+        <a href="about.html" class="sheet-link class="active""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> About</a>
+      </div>
+      <div class="sheet-footer">
+        <a href="https://instagram.com/yourhandle" class="sheet-social" target="_blank">Instagram</a>
+        <a href="mailto:your@email.com" class="sheet-social">Email</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-wrap">
+    <p class="about-label">About</p>
+    <!-- Ganti dengan namamu -->
+    <h1 class="about-name">Your Name <span>/ Hujan</span></h1>
+    <div class="divider"></div>
+    <!-- Ganti dengan bio singkatmu -->
+    <p class="about-bio">
+      A digital illustrator who loves preserving stories through drawings. The works here are born from everyday observations — small moments at a bus stop, brief conversations with strangers, or feelings that are difficult to express in words alone.
+
+      Hujan Gallery is a space for all of that: illustrations and stories that grow together, complementing each other.
+    </p>
+
+    <div class="contact-section">
+      <p class="contact-label">Find Me</p>
+      <div class="contact-list">
+        <!-- Ganti dengan link dan info kontakmu -->
+        <div class="contact-item">
+          <span class="contact-type">Instagram</span>
+          <a href="https://instagram.com/yourhandle" class="contact-value" target="_blank">@yourhandle</a>
+        </div>
+        <div class="contact-item">
+          <span class="contact-type">Email</span>
+          <a href="mailto:your@email.com" class="contact-value">your@email.com</a>
+        </div>
+        <div class="contact-item">
+          <span class="contact-type">Twitter / X</span>
+          <a href="https://twitter.com/yourhandle" class="contact-value" target="_blank">@yourhandle</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>gtcsbgad gallery</span>
+    <span>© 2026</span>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const ham  = document.getElementById('hamburger');
+      menu.classList.toggle('open');
+      ham.classList.toggle('open');
+      document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+    }
+    // Tutup saat klik overlay
+    document.getElementById('mobile-menu').addEventListener('click', function(e) {
+      if (e.target === this) toggleMenu();
+    });
+  </script>
+</body>
+</html>

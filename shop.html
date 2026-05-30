@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hujan — Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:    #111111;
+      --muted:  #888888;
+      --border: #e0e0e0;
+      --accent: #444444;
+      --btn:    #bbbbbb;
+      --white:  #ffffff;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'DM Sans', sans-serif;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--white); color: var(--ink); font-family: var(--font-body); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── NAV ── */
+    nav { padding: 1.4rem 4rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 10; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: 0.78rem; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.active { background: var(--btn); color: var(--white); padding: 4px 14px; border-radius: 100px; }
+
+    /* ── HERO FEATURED ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      border-bottom: 1px solid var(--border);
+      min-height: 420px;
+    }
+
+    .hero-img {
+      position: relative;
+      background: #f5f5f5;
+      overflow: hidden;
+    }
+
+    .hero-img img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      padding: 2rem;
+    }
+
+    .featured-badge {
+      position: absolute; top: 1.2rem; left: 1.2rem;
+      font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 4px 10px; background: var(--btn); color: var(--white);
+      border-radius: 100px;
+    }
+
+    .hero-info {
+      padding: 3rem 2.5rem;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 1rem; border-left: 1px solid var(--border);
+    }
+
+    .hero-eyebrow { font-size: 0.65rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+    .hero-title { font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 300; line-height: 1.15; letter-spacing: -0.01em; }
+    .hero-divider { width: 32px; height: 1px; background: var(--border); }
+    .hero-desc { font-size: 0.85rem; line-height: 1.8; color: var(--accent); }
+
+    .hero-products { display: flex; flex-direction: column; gap: 0.6rem; }
+    .hero-product-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0; border-bottom: 0.5px solid var(--border);
+    }
+    .hero-product-row:last-child { border-bottom: none; }
+    .hero-product-name { font-size: 0.8rem; color: var(--ink); }
+    .hero-product-price { font-size: 0.75rem; color: var(--muted); }
+    .soon-chip {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 2px 8px; border: 0.5px solid var(--border);
+      border-radius: 100px; color: var(--muted);
+    }
+
+    /* ── CATEGORY FILTER ── */
+    .filter-bar {
+      padding: 1rem 4rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .filter-label { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); flex-shrink: 0; }
+    .filter-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .filter-btn {
+      font-size: 0.72rem; padding: 4px 14px; border-radius: 100px;
+      border: 0.5px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer; transition: all 0.15s;
+      font-family: var(--font-body);
+    }
+    .filter-btn:hover { color: var(--btn); border-color: var(--btn); }
+    .filter-btn.active { background: var(--btn); color: var(--white); border-color: var(--btn); }
+
+    /* ── PRODUCT GRID ── */
+    .shop-main { padding: 3rem 4rem 5rem; flex: 1; }
+
+    .works-label { font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 2rem; }
+
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.8rem; }
+
+    .product-card { cursor: default; }
+
+    .product-thumb {
+      width: 100%; aspect-ratio: 1;
+      background: #f5f5f5; border-radius: 2px;
+      overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .product-thumb img {
+      width: 100%; height: 100%;
+      object-fit: contain; padding: 1rem;
+      display: block; transition: transform 0.5s var(--ease);
+    }
+
+    .product-card:hover .product-thumb img { transform: scale(1.04); }
+
+    .product-type-badge {
+      position: absolute; bottom: 0.6rem; left: 0.6rem;
+      font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 3px 8px; background: rgba(255,255,255,0.92);
+      border-radius: 100px; color: var(--accent);
+      border: 0.5px solid var(--border);
+    }
+
+    .soon-overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.0);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .product-card:hover .soon-overlay { opacity: 1; background: rgba(255,255,255,0.08); }
+
+    .product-info { padding: 0.8rem 0 0; }
+    .product-artwork { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+    .product-name { font-family: var(--font-display); font-size: 1rem; font-weight: 400; line-height: 1.3; margin-bottom: 0.25rem; }
+    .product-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 0.4rem; }
+    .product-price { font-size: 0.78rem; color: var(--muted); }
+    .product-soon { font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border: 0.5px solid var(--border); padding: 2px 8px; border-radius: 100px; }
+
+    /* ── NOTIFY STRIP ── */
+    .notify-strip {
+      border-top: 1px solid var(--border);
+      padding: 1.8rem 4rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 2rem;
+    }
+    .notify-left {}
+    .notify-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 300; }
+    .notify-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+    .notify-form { display: flex; gap: 0.5rem; align-items: center; }
+    .notify-input {
+      font-family: var(--font-body); font-size: 0.78rem; font-weight: 300;
+      padding: 0.5rem 1.2rem; border: 0.5px solid var(--border);
+      border-radius: 100px; background: transparent; color: var(--ink);
+      outline: none; width: 220px; transition: border-color 0.2s;
+    }
+    .notify-input:focus { border-color: var(--btn); }
+    .notify-input::placeholder { color: var(--muted); }
+    .notify-btn {
+      font-family: var(--font-body); font-size: 0.72rem; letter-spacing: 0.08em;
+      padding: 0.5rem 1.4rem; border-radius: 100px;
+      border: 0.5px solid var(--btn); background: var(--btn); color: var(--white);
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .notify-btn:hover { opacity: 0.8; }
+
+    /* ── FOOTER ── */
+    footer { padding: 1.8rem 4rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.06em; }
+
+    /* ── RESPONSIVE ── */
+    /* ── HAMBURGER MENU ── */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px; z-index: 201;
+    }
+    .hamburger span {
+      display: block; width: 22px; height: 1.5px;
+      background: var(--ink); transition: all 0.3s var(--ease); transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    /* ── MOBILE MENU OVERLAY ── */
+    .mobile-menu {
+      display: none; position: fixed; inset: 0;
+      background: rgba(17,17,17,0.5); z-index: 200;
+      flex-direction: column; justify-content: flex-end;
+    }
+    .mobile-menu.open { display: flex; }
+
+    .mobile-sheet {
+      background: var(--white);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 24px 40px;
+      animation: sheetUp 0.3s var(--ease);
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .sheet-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .sheet-handle {
+      width: 36px; height: 3px; background: var(--border);
+      border-radius: 100px; margin: 0 auto 20px;
+    }
+    .sheet-label {
+      font-size: 0.62rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .sheet-close {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #f5f5f5; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; color: var(--muted);
+    }
+
+    .sheet-links { display: flex; flex-direction: column; gap: 2px; }
+    .sheet-link {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 12px; border-radius: 8px;
+      font-size: 0.85rem; color: var(--muted);
+      text-decoration: none; transition: all 0.15s;
+    }
+    .sheet-link:hover { background: #f5f5f5; color: var(--ink); }
+    .sheet-link.active { background: #f5f5f5; color: var(--ink); }
+    .sheet-link svg { flex-shrink: 0; }
+
+    .sheet-footer {
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 20px;
+    }
+    .sheet-social {
+      font-size: 0.68rem; letter-spacing: 0.08em;
+      color: var(--muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .sheet-social:hover { color: var(--ink); }
+
+    @media (max-width: 700px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+    }
+    @media (min-width: 701px) { .mobile-menu { display: none !important; } }
+
+    @media (max-width: 700px) {
+      nav, .filter-bar, .shop-main, .notify-strip, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-img { min-height: 260px; }
+      .hero-info { border-left: none; border-top: 1px solid var(--border); padding: 2rem 1.5rem; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+      .notify-strip { flex-direction: column; align-items: flex-start; }
+      .notify-form { flex-direction: column; width: 100%; }
+      .notify-input { width: 100%; }
+      .notify-btn { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html" >Home</a></li>
+      <li><a href="gallery.html" >Gallery</a></li>
+      <li><a href="shop.html" class="active">Shop</a></li>
+      <li><a href="about.html" >About</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="mobile-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-label">Navigate</span>
+        <button class="sheet-close" onclick="toggleMenu()">✕</button>
+      </div>
+      <div class="sheet-links">
+        <a href="index.html" class="sheet-link "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg> Home</a>
+        <a href="gallery.html" class="sheet-link "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg> Gallery</a>
+        <a href="shop.html" class="sheet-link class="active""><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> Shop</a>
+        <a href="about.html" class="sheet-link "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg> About</a>
+      </div>
+      <div class="sheet-footer">
+        <a href="https://instagram.com/yourhandle" class="sheet-social" target="_blank">Instagram</a>
+        <a href="mailto:your@email.com" class="sheet-social">Email</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO — Featured Product -->
+  <div class="hero">
+    <div class="hero-img">
+      <img src="images/bulan.jpeg" alt="Talking to the Moon" />
+      <span class="featured-badge">Featured</span>
+    </div>
+    <div class="hero-info">
+      <p class="hero-eyebrow">Collection No. 01</p>
+      <h1 class="hero-title">Talking to the Moon</h1>
+      <div class="hero-divider"></div>
+      <p class="hero-desc">The first piece to open the Hujan merchandise collection. Each product is made with care, carrying the story of the artwork it holds.</p>
+      <div class="hero-products">
+        <div class="hero-product-row">
+          <span class="hero-product-name">Art Print — A3 / A4</span>
+          <span class="soon-chip">Coming Soon</span>
+        </div>
+        <div class="hero-product-row">
+          <span class="hero-product-name">Oversized T-shirt</span>
+          <span class="soon-chip">Coming Soon</span>
+        </div>
+        <div class="hero-product-row">
+          <span class="hero-product-name">Tote Bag</span>
+          <span class="soon-chip">Coming Soon</span>
+        </div>
+        <div class="hero-product-row">
+          <span class="hero-product-name">Denim Jacket</span>
+          <span class="soon-chip">Coming Soon</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-bar">
+    <span class="filter-label">Browse</span>
+    <div class="filter-btns">
+      <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
+      <button class="filter-btn" onclick="filterProducts('print', this)">Print</button>
+      <button class="filter-btn" onclick="filterProducts('apparel', this)">Apparel</button>
+      <button class="filter-btn" onclick="filterProducts('accessory', this)">Accessory</button>
+    </div>
+  </div>
+
+  <!-- PRODUCT GRID -->
+  <div class="shop-main">
+    <p class="works-label">All Products — Coming Soon</p>
+    <div class="product-grid" id="product-grid"></div>
+  </div>
+
+  <!-- NOTIFY STRIP -->
+  <div class="notify-strip">
+    <div class="notify-left">
+      <div class="notify-title">Be the first to know.</div>
+      <div class="notify-sub">Leave your email and we'll notify you when the shop opens.</div>
+    </div>
+    <div class="notify-form">
+      <input class="notify-input" type="email" placeholder="your@email.com" id="notify-email" />
+      <button class="notify-btn" onclick="submitNotify()">Notify Me</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>gtcsbgad gallery</span>
+    <span>© 2026</span>
+  </footer>
+
+  <script>
+    // ── DATA PRODUK
+    // type: 'print' | 'apparel' | 'accessory'
+    const products = [
+      // PRINTS
+      { name: "Art Print",        artwork: "Talking to the Moon",  type: "print",     src: "images/bulan.jpeg",    price: "Rp 150.000" },
+      { name: "Art Print",        artwork: "The Secret Garden",    type: "print",     src: "images/bintang.jpeg",  price: "Rp 150.000" },
+      { name: "Art Print",        artwork: "Rose",                 type: "print",     src: "images/bukit.PNG",     price: "Rp 150.000" },
+      { name: "Art Print",        artwork: "Little Field",         type: "print",     src: "images/ladang.PNG",    price: "Rp 150.000" },
+      { name: "Art Print",        artwork: "Bus Stop at Dusk",     type: "print",     src: "images/halte.jpeg",    price: "Rp 150.000" },
+      // APPAREL
+      { name: "Oversized T-shirt", artwork: "Talking to the Moon", type: "apparel",   src: "images/bulan.jpeg",   price: "Rp 250.000" },
+      { name: "Oversized T-shirt", artwork: "The Secret Garden",   type: "apparel",   src: "images/bintang.jpeg", price: "Rp 250.000" },
+      { name: "Tote Bag",          artwork: "Talking to the Moon", type: "apparel",   src: "images/bulan.jpeg",   price: "Rp 120.000" },
+      { name: "Tote Bag",          artwork: "The Secret Garden",   type: "apparel",   src: "images/bintang.jpeg", price: "Rp 120.000" },
+      { name: "Denim Jacket",      artwork: "Rose",                type: "apparel",   src: "images/bukit.PNG",    price: "Rp 450.000" },
+      // ACCESSORIES
+      { name: "Sticker Pack",      artwork: "All Works",           type: "accessory", src: "images/bintang.jpeg", price: "Rp 35.000" },
+      { name: "Enamel Pin",        artwork: "Talking to the Moon", type: "accessory", src: "images/bulan.jpeg",   price: "Rp 65.000" },
+      { name: "Keychain",          artwork: "The Secret Garden",   type: "accessory", src: "images/bintang.jpeg", price: "Rp 45.000" },
+      { name: "Button Badge",      artwork: "Rose",                type: "accessory", src: "images/bukit.PNG",    price: "Rp 25.000" },
+    ];
+
+    let activeFilter = 'all';
+
+    function renderProducts(filter) {
+      const filtered = filter === 'all' ? products : products.filter(p => p.type === filter);
+      document.getElementById('product-grid').innerHTML = filtered.map(p => `
+        <div class="product-card">
+          <div class="product-thumb">
+            <img src="${p.src}" alt="${p.name} — ${p.artwork}" loading="lazy" />
+            <span class="product-type-badge">${p.type}</span>
+          </div>
+          <div class="product-info">
+            <p class="product-artwork">${p.artwork}</p>
+            <h3 class="product-name">${p.name}</h3>
+            <div class="product-bottom">
+              <span class="product-price">${p.price}</span>
+              <span class="product-soon">Soon</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterProducts(type, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = type;
+      renderProducts(type);
+    }
+
+    function submitNotify() {
+      const email = document.getElementById('notify-email').value.trim();
+      const btn = document.querySelector('.notify-btn');
+      if (!email || !email.includes('@')) {
+        document.querySelector('.notify-input').style.borderColor = '#cc0000';
+        return;
+      }
+      document.querySelector('.notify-input').style.borderColor = '';
+      btn.textContent = 'Thank you ✓';
+      btn.style.background = '#bbb';
+      btn.disabled = true;
+      document.getElementById('notify-email').value = '';
+    }
+
+    renderProducts('all');
+  </script>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const ham  = document.getElementById('hamburger');
+      menu.classList.toggle('open');
+      ham.classList.toggle('open');
+      document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+    }
+    // Tutup saat klik overlay
+    document.getElementById('mobile-menu').addEventListener('click', function(e) {
+      if (e.target === this) toggleMenu();
+    });
+  </script>
+</body>
+</html>
