@@ -44,16 +44,27 @@
     .section-link:hover { color: var(--btn); border-color: var(--btn); }
 
     /* Slider */
-    .slider-wrap { position: relative; padding: 0 4rem; overflow: hidden; }
+    .slider-wrap { position: relative; padding: 0 4rem; }
 
     .slider-track {
       display: flex;
       gap: 1.5rem;
-      transition: transform 0.45s var(--ease);
-      will-change: transform;
+      overflow-x: scroll;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      cursor: grab;
+      user-select: none;
     }
+    .slider-track::-webkit-scrollbar { display: none; }
+    .slider-track.dragging { cursor: grabbing; scroll-behavior: auto; }
 
-    .card { cursor: pointer; text-decoration: none; display: block; flex: 0 0 calc((100% - 3rem) / 3); }
+    .card {
+      cursor: pointer; text-decoration: none; display: block;
+      flex: 0 0 calc((100% - 3rem) / 3);
+      scroll-snap-align: start;
+    }
     .card-thumb { width: 100%; aspect-ratio: 3/4; overflow: hidden; border-radius: 2px; background: #f5f5f5; }
     .card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s var(--ease); }
     .card:hover .card-thumb img { transform: scale(1.04); }
@@ -237,27 +248,31 @@
       dots.innerHTML = preview.map((_, i) =>
         `<button class="dot${i === 0 ? ' active' : ''}" onclick="goTo(${i})" aria-label="Slide ${i+1}"></button>`
       ).join('');
-
-      updateState();
     }
 
-    function updateState() {
-      const cardW = getCardWidth();
-      const offset = current * (cardW + gap);
-      document.getElementById('slider-track').style.transform = `translateX(-${offset}px)`;
+    function getStep() { return getCardWidth() + gap; }
+
+    function updateDots() {
+      const track = document.getElementById('slider-track');
+      current = Math.round(track.scrollLeft / getStep());
+      current = Math.max(0, Math.min(max, current));
       document.getElementById('btn-prev').disabled = current === 0;
       document.getElementById('btn-next').disabled = current >= max;
       document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
     }
 
     function slide(dir) {
+      const track = document.getElementById('slider-track');
       current = Math.max(0, Math.min(max, current + dir));
-      updateState();
+      track.scrollTo({ left: current * getStep(), behavior: 'smooth' });
+      updateDots();
     }
 
     function goTo(i) {
+      const track = document.getElementById('slider-track');
       current = Math.min(i, max);
-      updateState();
+      track.scrollTo({ left: current * getStep(), behavior: 'smooth' });
+      updateDots();
     }
 
     // ── MODAL ──
@@ -285,50 +300,43 @@
     });
 
     buildSlider();
-    window.addEventListener('resize', updateState);
 
     const sliderTrack = document.getElementById('slider-track');
 
-    // Touch swipe — HP
-    let touchStartX = 0;
-    sliderTrack.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-    sliderTrack.addEventListener('touchend', e => {
-      const diff = touchStartX - e.changedTouches[0].screenX;
-      if (Math.abs(diff) > 40) diff > 0 ? slide(1) : slide(-1);
+    // Update dots & tombol saat scroll native (touchpad / HP / mouse drag)
+    sliderTrack.addEventListener('scroll', () => {
+      clearTimeout(window._dotTimer);
+      window._dotTimer = setTimeout(updateDots, 60);
     }, { passive: true });
 
-    // Mouse drag — desktop/touchpad drag
-    let mouseStartX = 0;
-    let isDragging = false;
+    // Mouse drag — realtime follow cursor
+    let mouseStartX = 0, mouseScrollStart = 0, isDragging = false;
     sliderTrack.addEventListener('mousedown', e => {
       mouseStartX = e.clientX;
+      mouseScrollStart = sliderTrack.scrollLeft;
       isDragging = true;
+      sliderTrack.style.scrollBehavior = 'auto';
     });
-    window.addEventListener('mouseup', e => {
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      sliderTrack.scrollLeft = mouseScrollStart - (e.clientX - mouseStartX);
+    });
+    window.addEventListener('mouseup', () => {
       if (!isDragging) return;
       isDragging = false;
-      const diff = mouseStartX - e.clientX;
-      if (Math.abs(diff) > 50) diff > 0 ? slide(1) : slide(-1);
+      sliderTrack.style.scrollBehavior = '';
+      // Snap ke slide terdekat
+      const nearest = Math.round(sliderTrack.scrollLeft / getStep());
+      current = Math.max(0, Math.min(max, nearest));
+      sliderTrack.scrollTo({ left: current * getStep(), behavior: 'smooth' });
+      updateDots();
     });
+    sliderTrack.addEventListener('dragstart', e => e.preventDefault());
 
-    // Touchpad scroll horizontal — akumulasi delta
-    let accumulated = 0;
-    let wheelCooldown = false;
-    sliderTrack.addEventListener('wheel', e => {
-      const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
-      if (!isHorizontal) return;
-      e.preventDefault();
-      if (wheelCooldown) return;
-      accumulated += e.deltaX;
-      if (Math.abs(accumulated) > 80) {
-        accumulated > 0 ? slide(1) : slide(-1);
-        accumulated = 0;
-        wheelCooldown = true;
-        setTimeout(() => { wheelCooldown = false; }, 600);
-      }
-    }, { passive: false });
+    window.addEventListener('resize', () => {
+      sliderTrack.scrollTo({ left: current * getStep(), behavior: 'auto' });
+      updateDots();
+    });
   </script>
 </body>
 </html>
