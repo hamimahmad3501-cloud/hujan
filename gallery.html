@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hujan — Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:    #111111;
+      --muted:  #888888;
+      --border: #e0e0e0;
+      --accent: #444444;
+      --btn:    #bbbbbb;
+      --white:  #ffffff;
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'DM Sans', sans-serif;
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--white); color: var(--ink); font-family: var(--font-body); font-weight: 300; min-height: 100vh; }
+
+    nav { padding: 1.4rem 4rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 10; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { font-size: 0.78rem; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.active { background: var(--btn); color: var(--white); padding: 4px 14px; border-radius: 100px; }
+
+    .page-header { padding: 3.5rem 4rem 2.5rem; border-bottom: 1px solid var(--border); }
+    .page-title { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
+    .page-title span { color: var(--muted); }
+
+    main { padding: 3rem 4rem 5rem; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2rem; }
+    .card { cursor: pointer; }
+    .card-thumb { width: 100%; aspect-ratio: 3/4; overflow: hidden; border-radius: 2px; background: #f5f5f5; position: relative; }
+    .card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s var(--ease); }
+    .card:hover .card-thumb img { transform: scale(1.04); }
+    .card-overlay { position: absolute; inset: 0; background: rgba(17,17,17,0); transition: background 0.3s var(--ease); display: flex; align-items: flex-end; padding: 1.2rem; }
+    .card:hover .card-overlay { background: rgba(17,17,17,0.10); }
+    .card-overlay-text { opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
+    .card:hover .card-overlay-text { opacity: 1; transform: translateY(0); }
+    .card-info { padding: 0.9rem 0 0; }
+    .card-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 400; line-height: 1.3; }
+
+    /* ── MODAL TAHAP 1 — PREVIEW ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(17,17,17,0.7); z-index: 100;
+      align-items: center; justify-content: center;
+      padding: 2rem; backdrop-filter: blur(4px);
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal-preview {
+      background: var(--white); border-radius: 6px;
+      max-width: 920px; width: 100%;
+      display: grid; grid-template-columns: 3fr 2fr;
+      overflow: hidden; animation: modalIn 0.3s var(--ease);
+      max-height: 90vh;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-img-wrap {
+      position: relative; background: var(--white);
+      min-height: 480px; max-height: 90vh;
+    }
+    .modal-img-wrap img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: contain; padding: 2rem;
+    }
+    .modal-img-wrap img.hidden { display: none; }
+
+    .modal-right {
+      padding: 2.5rem 2rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.8rem;
+      overflow-y: auto; max-height: 90vh;
+      border-left: 1px solid var(--border);
+    }
+    .modal-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 300; line-height: 1.2; letter-spacing: -0.01em; }
+    .modal-divider { width: 32px; height: 1px; background: var(--border); }
+    .modal-excerpt { font-size: 0.85rem; line-height: 1.8; color: var(--accent); flex: 1; }
+    .modal-actions { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--border); margin-top: auto; }
+    .modal-nav-btns { display: flex; gap: 0.5rem; }
+    .modal-nav-btns button, .btn-storyline {
+      font-family: var(--font-body); font-size: 0.72rem; letter-spacing: 0.08em;
+      padding: 0.4rem 1rem; border-radius: 100px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s;
+    }
+    .modal-nav-btns button:hover:not(:disabled), .btn-storyline:hover { color: var(--btn); border-color: var(--btn); }
+    .modal-nav-btns button:disabled { opacity: 0.25; cursor: default; }
+    .btn-storyline { color: var(--white); border-color: var(--btn); background: var(--btn); }
+
+    .close-btn {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--white);
+      color: var(--ink); font-size: 0.8rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 5;
+    }
+
+    /* ── DUAL IMAGE TOGGLE ── */
+    .img-toggle {
+      position: absolute; bottom: 0.75rem; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(17,17,17,0.5); backdrop-filter: blur(6px);
+      border-radius: 100px; padding: 5px 10px; z-index: 5;
+    }
+    .img-toggle span { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.65); white-space: nowrap; transition: color 0.2s; }
+    .img-toggle span.active-label { color: #fff; }
+    .toggle-track { width: 32px; height: 18px; border-radius: 100px; background: rgba(255,255,255,0.2); position: relative; cursor: pointer; transition: background 0.25s; border: none; padding: 0; flex-shrink: 0; }
+    .toggle-track.on { background: rgba(255,255,255,0.45); }
+    .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform 0.25s var(--ease); }
+    .toggle-track.on .toggle-thumb { transform: translateX(14px); }
+
+    /* ── MODAL TAHAP 2 — FULL STORYLINE ── */
+    .modal-storyline {
+      display: none; background: var(--white); border-radius: 6px;
+      max-width: 520px; width: 100%; max-height: 90vh;
+      overflow: hidden; flex-direction: column;
+      animation: modalIn 0.25s var(--ease);
+    }
+    .modal-storyline.open { display: flex; }
+    .storyline-img { width: 100%; height: 200px; background: var(--white); position: relative; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+    .storyline-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 1rem; }
+    .storyline-body { padding: 1.8rem 2rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+    .storyline-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 300; }
+    .storyline-divider { width: 32px; height: 1px; background: var(--border); }
+    .storyline-text { font-size: 0.85rem; line-height: 1.9; color: var(--accent); white-space: pre-wrap; }
+    .btn-back { align-self: flex-start; font-family: var(--font-body); font-size: 0.72rem; letter-spacing: 0.08em; padding: 0.4rem 1rem; border-radius: 100px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+    .btn-back:hover { color: var(--btn); border-color: var(--btn); }
+
+    /* ── AUDIO MUTE BUTTON ── */
+    .btn-mute {
+      position: absolute; bottom: 0.75rem; right: 0.75rem;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--white);
+      color: var(--ink); font-size: 0.75rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 5; transition: all 0.2s; opacity: 0.85;
+    }
+    .btn-mute:hover { opacity: 1; border-color: var(--accent); }
+
+    footer { padding: 1.8rem 4rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.06em; }
+
+    @media (max-width: 700px) {
+      nav, .page-header, main, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .modal-preview { grid-template-columns: 1fr; max-height: 95vh; overflow-y: auto; }
+      .modal-img-wrap { height: 260px; min-height: unset; }
+      .modal-right { max-height: unset; }
+      .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="gallery.html" class="active">Gallery</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <h1 class="page-title">Gallery <span>of Works</span></h1>
+  </div>
+
+  <main>
+    <div class="gallery-grid" id="grid"></div>
+  </main>
+
+  <!-- MODAL TAHAP 1 — PREVIEW -->
+  <div class="modal-backdrop" id="backdrop" onclick="handleBackdropClick(event)">
+
+    <div class="modal-preview" id="modal-preview">
+      <div class="modal-img-wrap">
+        <img id="m-img-color" src="" alt="" />
+        <img id="m-img-mono" src="" alt="" class="hidden" />
+        <div class="img-toggle" id="img-toggle" style="display:none">
+          <span id="lbl-color" class="active-label">Color</span>
+          <button class="toggle-track" id="toggle-btn" onclick="toggleImage()" aria-label="Toggle monochrome">
+            <div class="toggle-thumb"></div>
+          </button>
+          <span id="lbl-mono">Mono</span>
+        </div>
+        <button class="close-btn" onclick="closeModal()" aria-label="Close">✕</button>
+        <button class="btn-mute" id="btn-mute" onclick="toggleMute()" aria-label="Toggle sound">♪</button>
+      </div>
+      <div class="modal-right">
+        <h2 class="modal-title" id="m-title"></h2>
+        <div class="modal-divider"></div>
+        <p class="modal-excerpt" id="m-excerpt"></p>
+        <div class="modal-actions">
+          <div class="modal-nav-btns">
+            <button id="prev-btn" onclick="navigate(-1)">←</button>
+            <button id="next-btn" onclick="navigate(1)">→</button>
+          </div>
+          <button class="btn-storyline" onclick="openStoryline()">Read Storyline →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL TAHAP 2 — FULL STORYLINE -->
+    <div class="modal-storyline" id="modal-storyline">
+      <div class="storyline-img">
+        <img id="s-img" src="" alt="" />
+      </div>
+      <div class="storyline-body">
+        <h2 class="storyline-title" id="s-title"></h2>
+        <div class="storyline-divider"></div>
+        <p class="storyline-text" id="s-story"></p>
+        <button class="btn-back" onclick="closeStoryline()">← Back</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>gtcsbgad gallery</span>
+    <span>© 2026</span>
+  </footer>
+
+  <script>
+    // ── DATA KARYA — edit di sini untuk tambah karya baru
+    // excerpt: deskripsi singkat (2-3 kalimat) yang muncul di preview
+    // story: cerita lengkap yang muncul di storyline
+    const works = [
+      {
+        id: 0,
+        title: "Bus Stop at Dusk",
+        src: "images/halte.jpeg",
+        audio: "audio/halte.mp3",
+        excerpt: "A bus stop at the edge of dusk — a place where people wait, and I love imagining the stories each of them carries.",
+        story: "Di penghujung malam, di tanggal dan bulan yang sama, di setiap tahunnya, di tempat itu. Ia bertanya dengan kostum \"princess\"-nya (aslinya ia tidak menyukai warna pink. Namun, kata mereka kebanyakan, perempuan harusnya menyukai warna-warna cerah. Pink itu cerah).\n\nIa bertanya kepada \"pangerannya\", seseorang yang pada saat itu duduk di sebelahnya, menggunakan kostum serupa versi laki-laki. Entah laki-laki ini memang berpakaian seperti itu setiap harinya (artinya ia tidak pura-pura, seperti Si Kecil Princess, atau sedang kebetulan bermain raja-rajaan juga?), entahlah. Si Kecil langsung menganggap laki-laki itu \"pangerannya\" karena entah kenapa ia selalu berada di sana, di sebelahnya, di tempat itu, setiap tahunnya.\n\n\"Padahal ini tempat tongkronganku,\" gumamnya. \"Ya sudahlah... berarti dia milikku juga, bisa dibilang gitu kan?\"\n\nAnehnya, laki-laki itu tahu bahwa Si Kecil Princess selalu datang di saat hari yang kata orang \"special\". Dapat bisikan, katanya Si Kecil ke tempat itu karena menghindari orang-orang, main hilang-hilangan. Dia belum paham, hari \"special\" itu seperti apa.\n\n\"Kamu mau apa di tahun ini?\" kata Pangeran.\n\"Kenapa emang?\"\n\"Gapapa, biar malam ini nggak sepi aja.\"\n\"Apa ya? Gatau.\"\n\"Masa gatau? Sukanya apa?\"\n\"Gatau... uang?\"\n\"Anak kecil belum boleh megang uang, tau.\"\n\"Hmm... Mau ditemenin kamu dulu deh.\"\n\"Yaudah, kalau gitu.\"\n\n\"Astaga... ternyata aku mau malam ini, di tanggal dan bulan yang sama di setiap tahunnya, atau bahkan setiap hari kalau boleh... Hari 'special' itu yang ada kamunya, kan?\""
+      },
+      {
+        id: 1,
+        title: "Talking to the Moon",
+        src: "images/bulan.jpeg",
+        srcMono: "images/bulan1.jpeg",
+        audio: "audio/bulan.mp3",
+        excerpt: "A small story that keeps circling in my head — about love, about drowning, about choosing whether to stay afloat.",
+        story: "Ada cerita kecil yang muter terus di kepala ku. Kemarin, sambil menangis dia bercerita: jiwa raganya di ambang mati, masa depannya mulai hari ini berhenti, tapi tetap akan jadi yang pertama yang dibutuhkan keluarganya.\n\nAku kira ini salah satu proses dari cinta, karena katanya, \"cinta butuh pengertian dan perjuangan\".\n\nTapi, di titik ini aku mulai sadar, bisa jadi itu cuma jebakan? Aslinya cinta itu proses halus membenarkan rasa lelah yang dipelihara?\n\nIya, aku lagi hitung seberapa besar kemungkinan ikut tenggelam. Aku ngerasa jadi monster karena berfikir logis: \"kalau lanjut, akan selamat atau malah ikut tenggelam?\" Agak ironi memang.\n\nAku ngerasa jadi monster karena berfikir: \"bebannya mungkin bisa bikin masa depanku runtuh juga\".\n\nTapi sayangku, sebenarnya aku ini monster baik yang lagi mencoba jujur sama kapasitas diri sendiri.\n\nJadi, should I drown too?"
+      },
+      {
+        id: 2,
+        title: "Rose",
+        src: "images/bukit.PNG",
+        audio: "audio/bukit.mp3",
+        excerpt: "A tall hill, a strong wind, and a feeling of freedom that cannot be put into words.",
+        story: "Bukit yang tinggi, angin yang kencang, dan rasa bebas yang tidak bisa dijelaskan. Saya menggambar karakter-karakter kecil di sana — terasa kecil di hadapan alam, tapi justru itulah yang membuat mereka merasa hidup."
+      },
+      {
+        id: 3,
+        title: "Little Field",
+        src: "images/ladang.PNG",
+        audio: "audio/ladang.mp3",
+        excerpt: "A comic strip about a little girl who finds her own world in the field behind her house. Each panel holds a different time — morning, noon, dusk.",
+        story: "Komik strip tentang seorang anak perempuan yang menemukan dunianya sendiri di ladang belakang rumah. Setiap panel menyimpan waktu yang berbeda — pagi, siang, sore. Kenangan masa kecil yang ingin saya jaga selamanya."
+      },
+      {
+        id: 4,
+        title: "Our Night Sky",
+        src: "images/halte.jpeg",
+        audio: "audio/halte.mp3",
+        excerpt: "At my lowest point, I chose solitude at a roadside bus stop — and found something unexpected sitting right beside me.",
+        story: "Di saat merasa paling jatuh, tidak dipihak oleh seisi dunia, untuk kesekian kalinya, aku memilih menyendiri, kali ini di halte pinggir jalan. Spot baru.\n\nTak lama, ada perempuan lain memilih tempat yang sama.\n\nIbu tiga anak, driver shopee instant. Istirahat sambil menunggu orderan masuk, katanya. Ia mengeluh soal motornya yang butut. Mba cantik. 21.40 masih semangat. Berangkat dari jam 8 pagi, sudah mengelilingi Jakarta dua kali. Hari ini dapat 78 ribu.\n\n\"Mau aku anter pulang ga kak?\"\n\"Mau, tapi rumahku deket banget mba, tinggal ngesot.\"\n\"Oalah, kenapa nggak pulang kalau gitu? Nunggu pacar ya?\"\n\"Lagi nggak mba, malas, rumahku rame banget.\" Bohong. Yang kamu maksud itu pikiranmu yang rame, kan?\n\nTernyata bukan dunia yang tak berpihak, aku saja yang lupa melihat."
+      },
+      {
+        id: 5,
+        title: "The Secret Garden",
+        src: "images/bintang.jpeg",
+        audio: "audio/bintang.mp3",
+        excerpt: "At the end of the night, on the same date every year, in that same place — she always found him sitting beside her.",
+        story: "Di penghujung malam, di tanggal dan bulan yang sama, di setiap tahunnya, di tempat itu. Ia bertanya dengan kostum \"princess\"-nya (aslinya ia tidak menyukai warna pink).\n\nIa bertanya kepada \"pangerannya\", seseorang yang pada saat itu duduk di sebelahnya. Si Kecil langsung menganggap laki-laki itu \"pangerannya\" karena entah kenapa ia selalu berada di sana, di sebelahnya, di tempat itu, setiap tahunnya.\n\n\"Kamu mau apa di tahun ini?\" kata Pangeran.\n\"Kenapa emang?\"\n\"Gapapa, biar malam ini nggak sepi aja.\"\n\"Gatau... uang?\"\n\"Anak kecil belum boleh megang uang, tau.\"\n\"Hmm... Mau ditemenin kamu dulu deh.\"\n\"Yaudah, kalau gitu.\"\n\nHal ini berulang setiap tahunnya. Bedanya, kostum yang ia pakai mulai lusuh. Dan tahun ini, laki-laki itu tidak ada di tempatnya.\n\n\"Astaga... ternyata aku mau malam ini, setiap hari kalau boleh... Hari 'special' itu yang ada kamunya, kan?\""
+      },
+    ];
+
+    let currentIdx = 0;
+    let isMonoActive = false;
+
+    // ── AUDIO PLAYER ──
+    let currentAudio = null;
+    let isMuted = false;
+
+    function playAudio(src) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      if (!src) return;
+      currentAudio = new Audio(src);
+      currentAudio.loop = true;
+      currentAudio.volume = 0;
+      currentAudio.muted = isMuted;
+      currentAudio.play().catch(() => {});
+      // Fade in pelan
+      let vol = 0;
+      const fade = setInterval(() => {
+        vol = Math.min(vol + 0.02, 0.35);
+        if (currentAudio) currentAudio.volume = isMuted ? 0 : vol;
+        if (vol >= 0.35) clearInterval(fade);
+      }, 80);
+    }
+
+    function stopAudio() {
+      if (!currentAudio) return;
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const btn = document.getElementById('btn-mute');
+      if (currentAudio) currentAudio.volume = isMuted ? 0 : 0.35;
+      btn.textContent = isMuted ? '✕' : '♪';
+      btn.title = isMuted ? 'Unmute' : 'Mute';
+    }
+
+    // Berhenti saat tab/app tidak aktif (untuk PC dan HP)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopAudio();
+    });
+
+    // Berhenti saat halaman ditinggalkan (pindah app di HP)
+    window.addEventListener('pagehide', () => stopAudio());
+    window.addEventListener('blur', () => {
+      if (document.getElementById('backdrop').classList.contains('open')) stopAudio();
+    });
+
+    // Render grid
+    document.getElementById('grid').innerHTML = works.map((w, i) => `
+      <article class="card" id="work-${i}" onclick="openModal(${i})" role="button" tabindex="0"
+        aria-label="Open work: ${w.title}"
+        onkeydown="if(event.key==='Enter')openModal(${i})">
+        <div class="card-thumb">
+          <img src="${w.src}" alt="${w.title}" loading="lazy" />
+          <div class="card-overlay"><span class="card-overlay-text">View →</span></div>
+        </div>
+        <div class="card-info"><h2 class="card-title">${w.title}</h2></div>
+      </article>
+    `).join('');
+
+    // Scroll + buka modal jika dibuka dari home via anchor (#bulan, #bintang, dll)
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    if (hash) {
+      const el = document.getElementById(hash);
+      const workIdx = works.findIndex(w =>
+        w.src.split('/').pop().split('.')[0].toLowerCase() === hash
+      );
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => {
+            if (workIdx !== -1) openModal(workIdx);
+          }, 400);
+        }, 150);
+      }
+    }
+
+    function openModal(i) {
+      currentIdx = i;
+      isMonoActive = false;
+      const w = works[i];
+
+      // Reset ke preview mode
+      document.getElementById('modal-preview').style.display = 'grid';
+      document.getElementById('modal-storyline').classList.remove('open');
+
+      const imgColor  = document.getElementById('m-img-color');
+      const imgMono   = document.getElementById('m-img-mono');
+      const toggle    = document.getElementById('img-toggle');
+      const toggleBtn = document.getElementById('toggle-btn');
+
+      imgColor.src = w.src; imgColor.alt = w.title;
+      imgColor.classList.remove('hidden');
+
+      if (w.srcMono) {
+        imgMono.src = w.srcMono; imgMono.alt = w.title;
+        imgMono.classList.add('hidden');
+        toggle.style.display = 'flex';
+        toggleBtn.classList.remove('on');
+        document.getElementById('lbl-color').classList.add('active-label');
+        document.getElementById('lbl-mono').classList.remove('active-label');
+      } else {
+        imgMono.src = ''; imgMono.classList.add('hidden');
+        toggle.style.display = 'none';
+      }
+
+      document.getElementById('m-title').textContent = w.title;
+      document.getElementById('m-excerpt').textContent = w.excerpt;
+      document.getElementById('prev-btn').disabled = i === 0;
+      document.getElementById('next-btn').disabled = i === works.length - 1;
+      document.getElementById('backdrop').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      playAudio(w.audio || null);
+    }
+
+    function openStoryline() {
+      const w = works[currentIdx];
+      document.getElementById('s-img').src = w.src;
+      document.getElementById('s-img').alt = w.title;
+      document.getElementById('s-title').textContent = w.title;
+      document.getElementById('s-story').textContent = w.story;
+      document.getElementById('modal-preview').style.display = 'none';
+      document.getElementById('modal-storyline').classList.add('open');
+    }
+
+    function closeStoryline() {
+      document.getElementById('modal-storyline').classList.remove('open');
+      document.getElementById('modal-preview').style.display = 'grid';
+    }
+
+    function toggleImage() {
+      isMonoActive = !isMonoActive;
+      const imgColor  = document.getElementById('m-img-color');
+      const imgMono   = document.getElementById('m-img-mono');
+      const toggleBtn = document.getElementById('toggle-btn');
+      const lblColor  = document.getElementById('lbl-color');
+      const lblMono   = document.getElementById('lbl-mono');
+      if (isMonoActive) {
+        imgColor.classList.add('hidden'); imgMono.classList.remove('hidden');
+        toggleBtn.classList.add('on'); lblColor.classList.remove('active-label'); lblMono.classList.add('active-label');
+      } else {
+        imgColor.classList.remove('hidden'); imgMono.classList.add('hidden');
+        toggleBtn.classList.remove('on'); lblColor.classList.add('active-label'); lblMono.classList.remove('active-label');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('backdrop').classList.remove('open');
+      document.getElementById('modal-storyline').classList.remove('open');
+      document.getElementById('modal-preview').style.display = 'grid';
+      document.body.style.overflow = '';
+      stopAudio();
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target === document.getElementById('backdrop')) closeModal();
+    }
+
+    function navigate(dir) {
+      const next = currentIdx + dir;
+      if (next >= 0 && next < works.length) openModal(next);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'ArrowLeft') navigate(-1);
+      if (e.key === 'ArrowRight') navigate(1);
+    });
+  </script>
+</body>
+</html>
